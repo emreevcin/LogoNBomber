@@ -70,12 +70,11 @@ namespace LogoNBomber
 
                         var updateActivity = await Step.Run("update_activity", context, async () =>
                         {
-                            var updatedActivity = new MTActivitiyDto
+                            var updatedActivity = new MTActivityDto
                             {
                                 Id = firstActivity.Id,
                                 ActivitySubject = "UpdatedActivitySubject",
                                 ActivityDate = DateTime.Now,
-                                ActivityRepeatDate = DateTime.Now,
                                 Priority = 1
                             };
 
@@ -92,7 +91,7 @@ namespace LogoNBomber
                             }
                             else
                             {
-                                return Response.Fail<MTActivitiyDto>();
+                                return Response.Fail<MTActivityDto>();
                             }
                         });
 
@@ -107,13 +106,13 @@ namespace LogoNBomber
 
                             if (!response.IsError && response.Payload.Value.IsSuccessStatusCode)
                             {
-                                var activity = await response.Payload.Value.Content.ReadFromJsonAsync<MTActivitiyDto>();
+                                var activity = await response.Payload.Value.Content.ReadFromJsonAsync<MTActivityDto>();
 
                                 return Response.Ok(payload: activity);
                             }
                             else
                             {
-                                return Response.Fail<MTActivitiyDto>();
+                                return Response.Fail<MTActivityDto>();
                             }
                         });
                     }
@@ -121,7 +120,7 @@ namespace LogoNBomber
                     {
                         var createActivity = await Step.Run("create_activity", context, async () =>
                         {
-                            var newActivity = new MTActivitiyDto
+                            var newActivity = new MTActivityDto
                             {
                                 ActivitySubject = "NewActivitySubject",
                                 ActivityDate = DateTime.Now,

@@ -15,9 +15,9 @@ namespace LogoNBomber
             var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
             var httpClient = httpClientFactory.CreateClient();
 
-            var testTicketScenario = new TestTicketScenario();
+            var testActivityScenario = new TestActivityScenario();
 
-            var scenario = testTicketScenario.Create()
+            var scenario = testActivityScenario.Create()
                 .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(1)))
                 .WithoutWarmUp();
             var result = NBomberRunner

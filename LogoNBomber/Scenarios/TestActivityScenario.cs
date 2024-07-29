@@ -1,5 +1,6 @@
 ﻿using LogoNBomber.Dtos;
 using LogoNBomber.Fakers;
+using LogoNBomber.Generics;
 using LogoNBomber.Helpers;
 using NBomber.Contracts;
 using NBomber.CSharp;
@@ -18,6 +19,7 @@ namespace LogoNBomber.Scenarios
     public class TestActivityScenario
     {
         private HttpClient _httpClient = new HttpClient();
+        private const string endpoint = "activities";
 
         public ScenarioProps Create(UserDto user)
         {
@@ -35,7 +37,7 @@ namespace LogoNBomber.Scenarios
 
                         var getAvailableActivity = await Step.Run<List<MTActivityResponse>>("get_available_activity", context, async () =>
                         {
-                            var request = Http.CreateRequest("GET", $"http://localhost/LogoCRMRest/api/v1.0/activities?SessionId={sessionId}")
+                            var request = Http.CreateRequest(Constants.GET, $"{Constants.BaseUrl}{endpoint}?SessionId={sessionId}")
                                 .WithHeader("Content-Type", "application/json");
 
                             var response = await Http.Send(_httpClient, request);
@@ -65,7 +67,7 @@ namespace LogoNBomber.Scenarios
                                 var updatedActivity = faker.Generate();
 
                                 var data = JsonConvert.SerializeObject(updatedActivity);
-                                var request = Http.CreateRequest("PUT", $"http://localhost/LogoCRMRest/api/v1.0/activities/{firstActivity.Oid}?SessionId={sessionId}")
+                                var request = Http.CreateRequest(Constants.PUT, $"{Constants.BaseUrl}{endpoint}/{firstActivity.Oid}?SessionId={sessionId}")
                                     .WithHeader("Content-Type", "application/json")
                                     .WithBody(new StringContent(data, Encoding.UTF8, "application/json"));
 
@@ -85,7 +87,7 @@ namespace LogoNBomber.Scenarios
 
                             var getUpdatedActivity = await Step.Run("get_updated_activity", context, async () =>
                             {
-                                var request = Http.CreateRequest("GET", $"http://localhost/LogoCRMRest/api/v1.0/activities/{firstActivity.Oid}?SessionId={sessionId}")
+                                var request = Http.CreateRequest(Constants.GET, $"{Constants.BaseUrl}{endpoint}/{firstActivity.Oid}?SessionId={sessionId}")
                                     .WithHeader("Content-Type", "application/json");
 
                                 var response = await Http.Send(_httpClient, request);
@@ -108,7 +110,7 @@ namespace LogoNBomber.Scenarios
                             {
                                 var newActivity = faker.Generate();
                                 var data = JsonConvert.SerializeObject(newActivity);
-                                var request = Http.CreateRequest("POST", $"http://localhost/LogoCRMRest/api/v1.0/activities?SessionId={sessionId}")
+                                var request = Http.CreateRequest(Constants.POST, $"{Constants.BaseUrl}{endpoint}?SessionId={sessionId}")
                                     .WithHeader("Content-Type", "application/json")
                                     .WithBody(new StringContent(data, Encoding.UTF8, "application/json"));
 
@@ -130,7 +132,7 @@ namespace LogoNBomber.Scenarios
 
                             var getCreatedActivity = await Step.Run("get_created_activity", context, async () =>
                             {
-                                var request = Http.CreateRequest("GET", $"http://localhost/LogoCRMRest/api/v1.0/activities/{createdActivityPayload.Oid}?SessionId={sessionId}")
+                                var request = Http.CreateRequest(Constants.GET, $"{Constants.BaseUrl}{endpoint}/{createdActivityPayload.Oid}?SessionId={sessionId}")
                                     .WithHeader("Content-Type", "application/json");
 
                                 var response = await Http.Send(_httpClient, request);

@@ -1,4 +1,5 @@
 ﻿using LogoNBomber.Dtos;
+using LogoNBomber.Generics;
 using LogoNBomber.Helpers;
 using NBomber.Contracts;
 using NBomber.CSharp;
@@ -17,6 +18,7 @@ namespace LogoNBomber.Scenarios
     public class TestTicketScenario
     {
         private HttpClient _httpClient = new HttpClient();
+        private const string endpoint = "tickets";
 
         public ScenarioProps Create(UserDto user)
         {
@@ -31,7 +33,7 @@ namespace LogoNBomber.Scenarios
 
                         var getTickets = await Step.Run($"{user.UserName}_get_tickets", context, async () =>
                         {
-                            var request = Http.CreateRequest("GET", $"http://localhost/LogoCRMRest/api/v1.0/tickets?SessionId={sessionId}&query=TicketDescription='Şikayet'")
+                            var request = Http.CreateRequest(Constants.GET, $"{Constants.BaseUrl}{endpoint}?SessionId={sessionId}&query=TicketDescription='Şikayet'")
                                 .WithHeader("Content-Type", "application/json");
 
                             var response = await Http.Send(_httpClient, request);
@@ -57,7 +59,7 @@ namespace LogoNBomber.Scenarios
                             {
                                 ticket.TicketDescription = "Müşteri Şikayeti";
                                 var data = JsonConvert.SerializeObject(ticket);
-                                var request = Http.CreateRequest("PATCH", $"http://localhost/LogoCRMRest/api/v1.0/tickets/{ticket.Oid}?SessionId={sessionId}")
+                                var request = Http.CreateRequest(Constants.PATCH, $"{Constants.BaseUrl}{endpoint}/{ticket.Oid}?SessionId={sessionId}")
                                     .WithHeader("Content-Type", "application/json")
                                     .WithBody(new StringContent(data, Encoding.UTF8, "application/json"));
 

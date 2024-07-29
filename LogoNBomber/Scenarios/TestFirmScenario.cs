@@ -1,4 +1,6 @@
 ﻿using LogoNBomber.Dtos;
+using LogoNBomber.Fakers;
+using LogoNBomber.Generics;
 using LogoNBomber.Helpers;
 using NBomber.Contracts;
 using NBomber.CSharp;
@@ -17,8 +19,11 @@ namespace LogoNBomber.Scenarios
     public class TestFirmScenario
     {
         private HttpClient _httpClient = new HttpClient();
+        private const string endpoint = "firms";
         public ScenarioProps Create(UserDto user)
         {
+            var faker = new MTFirmDtoFaker();
+
             return Scenario
                 .Create($"{user.UserName}_test_firm_scenario", async context =>
                 {
@@ -31,7 +36,7 @@ namespace LogoNBomber.Scenarios
 
                         var getAvailableFirm = await Step.Run("get_available_firm", context, async () =>
                         {
-                            var request = Http.CreateRequest("GET", $"http://localhost/LogoCRMRest/api/v1.0/firms?SessionId={sessionId}")
+                            var request = Http.CreateRequest(Constants.GET, $"{Constants.BaseUrl}{endpoint}?SessionId={sessionId}")
                                 .WithHeader("Content-Type", "application/json");
 
                             var response = await Http.Send(_httpClient, request);
@@ -54,13 +59,8 @@ namespace LogoNBomber.Scenarios
                         var createFirm = await Step.Run("create_firm", context, async () =>
                         {
 
-                            var data = JsonConvert.SerializeObject(new MTFirmDto
-                            {
-                                FirmCode = "FirmCode",
-                                FirmTitle = "FirmTitle",
-                                InUse = true
-                            });
-                            var request = Http.CreateRequest("POST", $"http://localhost/LogoCRMRest/api/v1.0/firms?SessionId={sessionId}")
+                            var data = JsonConvert.SerializeObject(faker.Generate());
+                            var request = Http.CreateRequest(Constants.POST, $"{Constants.BaseUrl}{endpoint}?SessionId={sessionId}")
                                 .WithHeader("Content-Type", "application/json")
                                 .WithBody(new StringContent(data, Encoding.UTF8, "application/json"));
 

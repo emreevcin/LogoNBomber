@@ -1,5 +1,6 @@
 ﻿using LogoNBomber.Dtos;
 using LogoNBomber.Fakers;
+using LogoNBomber.Generics;
 using LogoNBomber.Helpers;
 using NBomber.Contracts;
 using NBomber.CSharp;
@@ -18,6 +19,7 @@ namespace LogoNBomber.Scenarios
     public class TestProposalScenario
     {
         private HttpClient _httpClient = new HttpClient();
+        private const string endpoint = "proposals";
         public ScenarioProps Create(UserDto user)
         {
             var faker = new MTProposalDtoFaker();
@@ -33,7 +35,7 @@ namespace LogoNBomber.Scenarios
                         var createProposal = await Step.Run($"{user.UserName}_create_proposal", context, async () =>
                         {
                             var data = JsonConvert.SerializeObject(faker.Generate());
-                            var request = Http.CreateRequest("POST", $"http://localhost/LogoCRMRest/api/v1.0/proposals?SessionId={sessionId}")
+                            var request = Http.CreateRequest(Constants.POST, $"{Constants.BaseUrl}{endpoint}?SessionId={sessionId}")
                                 .WithHeader("Content-Type", "application/json")
                                 .WithBody(new StringContent(data, Encoding.UTF8, "application/json"));
 
@@ -56,7 +58,7 @@ namespace LogoNBomber.Scenarios
 
                         var deleteProposal = await Step.Run($"{user.UserName}_delete_proposal", context, async () =>
                         {
-                            var request = Http.CreateRequest("DELETE", $"http://localhost/LogoCRMRest/api/v1.0/proposals/{createdProposalPayload.Oid}?SessionId={sessionId}")
+                            var request = Http.CreateRequest(Constants.DELETE, $"{Constants.BaseUrl}{endpoint}/{createdProposalPayload.Oid}?SessionId={sessionId}")
                                 .WithHeader("Content-Type", "application/json");
 
                             var response = await Http.Send(_httpClient, request);

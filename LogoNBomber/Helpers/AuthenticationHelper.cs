@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using LogoNBomber.Generics;
 
 namespace LogoNBomber.Helpers
 {
@@ -14,9 +15,9 @@ namespace LogoNBomber.Helpers
         public static async Task<string> Login(UserDto user, HttpClient _httpClient)
         {
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{user.UserName}:{user.Password}"));
-            var url = $"http://localhost/LogoCRMRest/api/v1.0/login?authorization={auth}";
+            var url = $"{Constants.BaseUrl}login?authorization={auth}";
 
-            var request = Http.CreateRequest("POST", url);
+            var request = Http.CreateRequest(Constants.POST, url);
             var response = await Http.Send(_httpClient, request);
 
             if (!response.IsError && response.Payload.Value.IsSuccessStatusCode)
@@ -34,8 +35,8 @@ namespace LogoNBomber.Helpers
 
         public static async Task Logout(UserDto user, HttpClient _httpClient)
         {
-            var url = $"http://localhost/LogoCRMRest/api/v1.0/logout?sessionId={user.SessionId}";
-            var request = Http.CreateRequest("POST", url);
+            var url = $"{Constants.BaseUrl}logout?sessionId={user.SessionId}";
+            var request = Http.CreateRequest(Constants.POST, url);
 
             await Http.Send(_httpClient, request);
         }
@@ -43,9 +44,9 @@ namespace LogoNBomber.Helpers
         public static async Task<List<UserDto>> GetActiveUsers(UserDto user, HttpClient _httpClient)
         {
             var sessionId = await Login(user, _httpClient);
-            var requestUrl = $"http://localhost/LogoCRMRest/api/v1.0/users?SessionId={sessionId}&query=isActive=true";
+            var requestUrl = $"{Constants.BaseUrl}users?SessionId={sessionId}&query=isActive=true";
 
-            var request = Http.CreateRequest("GET", requestUrl);
+            var request = Http.CreateRequest(Constants.GET, requestUrl);
             var response = await Http.Send(_httpClient, request);
 
             if (!response.IsError && response.Payload.Value.IsSuccessStatusCode)

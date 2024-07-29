@@ -1,5 +1,4 @@
 ﻿using Bogus;
-using System;
 using LogoNBomber.Dtos;
 
 namespace LogoNBomber.Fakers

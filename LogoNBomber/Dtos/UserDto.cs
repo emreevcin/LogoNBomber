@@ -15,6 +15,7 @@ namespace LogoNBomber.Dtos
 
         public UserDto(string userName, string password)
         {
+            SessionId = null;
             UserName = userName;
             Password = password;
         }

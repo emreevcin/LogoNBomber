@@ -1,4 +1,5 @@
 ﻿using LogoNBomber.Dtos;
+using LogoNBomber.Fakers;
 using LogoNBomber.Helpers;
 using NBomber.Contracts;
 using NBomber.CSharp;
@@ -12,7 +13,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogoNBomber
+namespace LogoNBomber.Scenarios
 {
     public class TestActivityScenario
     {
@@ -21,6 +22,7 @@ namespace LogoNBomber
         public ScenarioProps Create()
         {
             var user = new UserDto("LOGO", "LOGO");
+            var faker = new MTActivityDtoFaker();
 
             return Scenario
                 .Create("test_activity_scenario", async context =>
@@ -70,13 +72,7 @@ namespace LogoNBomber
 
                         var updateActivity = await Step.Run("update_activity", context, async () =>
                         {
-                            var updatedActivity = new MTActivityDto
-                            {
-                                Id = firstActivity.Id,
-                                ActivitySubject = "UpdatedActivitySubject",
-                                ActivityDate = DateTime.Now,
-                                Priority = 1
-                            };
+                            var updatedActivity = faker.Generate();
 
                             var data = JsonConvert.SerializeObject(updatedActivity);
                             var request = Http.CreateRequest("PUT", $"http://localhost/LogoCRMRest/api/v1.0/activities/{firstActivity.Oid}?SessionId={sessionId}")
@@ -120,12 +116,7 @@ namespace LogoNBomber
                     {
                         var createActivity = await Step.Run("create_activity", context, async () =>
                         {
-                            var newActivity = new MTActivityDto
-                            {
-                                ActivitySubject = "NewActivitySubject",
-                                ActivityDate = DateTime.Now,
-                                Priority = 1
-                            };
+                            var newActivity = faker.Generate();
                             var data = JsonConvert.SerializeObject(newActivity);
                             var request = Http.CreateRequest("POST", $"http://localhost/LogoCRMRest/api/v1.0/activities?SessionId={sessionId}")
                                 .WithHeader("Content-Type", "application/json")

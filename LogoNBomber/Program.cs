@@ -1,7 +1,11 @@
-﻿using LogoNBomber.Scenarios;
+﻿using LogoNBomber.Dtos;
+using LogoNBomber.Helpers;
+using LogoNBomber.Scenarios;
 using Microsoft.Extensions.DependencyInjection;
 using NBomber.Contracts;
 using NBomber.CSharp;
+using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -24,32 +28,44 @@ namespace LogoNBomber
             var testTicketScenario = new TestTicketScenario();
             var testProposalScenario = new TestProposalScenario();
 
-            var loginLogoutScenario = testLoginLogoutScenario.Create()
-                .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(10)))
-                .WithoutWarmUp();
+            var users = await FetchActiveUsers();
+            var tasks = new List<Task>();
 
-            var activityScenario = testActivityScenario.Create()
-                .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(10)))
-                .WithoutWarmUp();
+            foreach (var user in users)
+            {
+                var task = Task.Run(async () =>
+                {
+                    var loginLogoutScenario = testLoginLogoutScenario.Create(user)
+                        .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(5)))
+                        .WithoutWarmUp();
 
-            var firmScenario = testFirmScenario.Create()
-                .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(10)))
-                .WithoutWarmUp();
+                    var activityScenario = testActivityScenario.Create(user)
+                        .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(5)))
+                        .WithoutWarmUp();
 
-            var ticketScenario = testTicketScenario.Create()
-                .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(10)))
-                .WithoutWarmUp();
+                    var firmScenario = testFirmScenario.Create(user)
+                        .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(5)))
+                        .WithoutWarmUp();
 
-            var proposalScenario = testProposalScenario.Create()
-                .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(10)))
-                .WithoutWarmUp();
+                    var ticketScenario = testTicketScenario.Create(user)
+                        .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(5)))
+                        .WithoutWarmUp();
 
-            // Run each scenario sequentially with delay between them
-            await RunScenarioWithDelay(loginLogoutScenario, TimeSpan.FromSeconds(3));
-            await RunScenarioWithDelay(activityScenario, TimeSpan.FromSeconds(3));
-            await RunScenarioWithDelay(firmScenario, TimeSpan.FromSeconds(3));
-            await RunScenarioWithDelay(ticketScenario, TimeSpan.FromSeconds(3));
-            await RunScenarioWithDelay(proposalScenario, TimeSpan.FromSeconds(3));
+                    var proposalScenario = testProposalScenario.Create(user)
+                        .WithLoadSimulations(Simulation.Inject(rate: 1, interval: TimeSpan.FromSeconds(1), during: TimeSpan.FromSeconds(5)))
+                        .WithoutWarmUp();
+
+                    await RunScenarioWithDelay(loginLogoutScenario, TimeSpan.FromSeconds(3));
+                    await RunScenarioWithDelay(activityScenario, TimeSpan.FromSeconds(3));
+                    await RunScenarioWithDelay(firmScenario, TimeSpan.FromSeconds(3));
+                    await RunScenarioWithDelay(ticketScenario, TimeSpan.FromSeconds(3));
+                    await RunScenarioWithDelay(proposalScenario, TimeSpan.FromSeconds(3));
+                });
+
+                tasks.Add(task);
+            }
+
+            await Task.WhenAll(tasks);
         }
 
         private static void ConfigureServices(IServiceCollection services)
@@ -64,6 +80,22 @@ namespace LogoNBomber
                 .Run();
 
             await Task.Delay(delay);
+        }
+
+        private static async Task<List<UserDto>> FetchActiveUsers()
+        {
+            var user = new UserDto("LOGO", "LOGO");
+            var httpClient = new HttpClient();
+
+            try
+            {
+                List<UserDto> users = await AuthenticationHelper.GetActiveUsers(user, httpClient);
+                return users;
+            }
+            catch
+            {
+                return new List<UserDto>();
+            }
         }
     }
 }

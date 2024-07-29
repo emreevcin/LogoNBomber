@@ -18,20 +18,19 @@ namespace LogoNBomber.Scenarios
     public class TestProposalScenario
     {
         private HttpClient _httpClient = new HttpClient();
-        public ScenarioProps Create()
+        public ScenarioProps Create(UserDto user)
         {
-            var user = new UserDto("LOGO", "LOGO");
             var faker = new MTProposalDtoFaker();
 
             return Scenario
-                .Create("test_proposal_scenario", async context =>
+                .Create($"{user.UserName}_test_proposal_scenario", async context =>
                 {
                 var loginResponse = await ScenarioHelper.Login(user, context);
                 if (!loginResponse.IsError && loginResponse.Payload.IsSome())
                 {
                         string sessionId = loginResponse.Payload.Value;
 
-                        var createProposal = await Step.Run("create_proposal", context, async () =>
+                        var createProposal = await Step.Run($"{user.UserName}_create_proposal", context, async () =>
                         {
                             var data = JsonConvert.SerializeObject(faker.Generate());
                             var request = Http.CreateRequest("POST", $"http://localhost/LogoCRMRest/api/v1.0/proposals?SessionId={sessionId}")
@@ -55,7 +54,7 @@ namespace LogoNBomber.Scenarios
 
                         var createdProposalPayload = createProposal.Payload.Value;
 
-                        var deleteProposal = await Step.Run("delete_proposal", context, async () =>
+                        var deleteProposal = await Step.Run($"{user.UserName}_delete_proposal", context, async () =>
                         {
                             var request = Http.CreateRequest("DELETE", $"http://localhost/LogoCRMRest/api/v1.0/proposals/{createdProposalPayload.Oid}?SessionId={sessionId}")
                                 .WithHeader("Content-Type", "application/json");

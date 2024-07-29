@@ -38,6 +38,28 @@ namespace LogoNBomber.Helpers
             var request = Http.CreateRequest("POST", url);
 
             await Http.Send(_httpClient, request);
-        } 
+        }
+
+        public static async Task<List<UserDto>> GetActiveUsers(UserDto user, HttpClient _httpClient)
+        {
+            var sessionId = await Login(user, _httpClient);
+            var requestUrl = $"http://localhost/LogoCRMRest/api/v1.0/users?SessionId={sessionId}&query=isActive=true";
+
+            var request = Http.CreateRequest("GET", requestUrl);
+            var response = await Http.Send(_httpClient, request);
+
+            if (!response.IsError && response.Payload.Value.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Payload.Value.Content.ReadAsStringAsync();
+                var userResponse = JsonConvert.DeserializeObject<UserResponseDto>(responseContent);
+
+                var userDtos = userResponse.Items.Select(u => new UserDto(u.UserName, u.UserName)).ToList();
+                return userDtos;
+            }
+            else
+            {
+                throw new HttpRequestException("GetActiveUsers failed");
+            }
+        }
     }
 }

@@ -18,12 +18,10 @@ namespace LogoNBomber.Scenarios
     {
         private HttpClient _httpClient = new HttpClient();
 
-        public ScenarioProps Create()
+        public ScenarioProps Create(UserDto user)
         {
-            var user = new UserDto("LOGO", "LOGO");
-
             return Scenario
-                .Create("test_ticket_scenario", async context =>
+                .Create($"{user.UserName}_test_ticket_scenario", async context =>
                 {
                     var loginResponse = await ScenarioHelper.Login(user, context);
 
@@ -31,7 +29,7 @@ namespace LogoNBomber.Scenarios
                     {
                         string sessionId = loginResponse.Payload.Value;
 
-                        var getTickets = await Step.Run("get_tickets", context, async () =>
+                        var getTickets = await Step.Run($"{user.UserName}_get_tickets", context, async () =>
                         {
                             var request = Http.CreateRequest("GET", $"http://localhost/LogoCRMRest/api/v1.0/tickets?SessionId={sessionId}&query=TicketDescription='Şikayet'")
                                 .WithHeader("Content-Type", "application/json");
@@ -55,7 +53,7 @@ namespace LogoNBomber.Scenarios
                         var ticketsToUpdate = ticketsPayload.ToList();
                         foreach (var ticket in ticketsToUpdate)
                         {
-                            var updateTicket = await Step.Run("update_ticket", context, async () =>
+                            var updateTicket = await Step.Run($"{user.UserName}_update_ticket", context, async () =>
                             {
                                 ticket.TicketDescription = "Müşteri Şikayeti";
                                 var data = JsonConvert.SerializeObject(ticket);

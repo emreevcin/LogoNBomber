@@ -20,4 +20,9 @@ namespace LogoNBomber.Dtos
             Password = password;
         }
     }
+
+    public class UserResponseDto
+    {
+        public List<UserDto> Items { get; set; }
+    }
 }

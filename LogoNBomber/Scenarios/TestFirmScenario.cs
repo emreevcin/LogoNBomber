@@ -17,77 +17,67 @@ namespace LogoNBomber.Scenarios
     public class TestFirmScenario
     {
         private HttpClient _httpClient = new HttpClient();
-        public ScenarioProps Create()
+        public ScenarioProps Create(UserDto user)
         {
-            var user = new UserDto("LOGO", "LOGO");
-
             return Scenario
-                .Create("test_firm_scenario", async context =>
+                .Create($"{user.UserName}_test_firm_scenario", async context =>
                 {
-                    var login = await Step.Run("login", context, async () =>
-                    {
-                        try
-                        {
-                            var sessionId = await AuthenticationHelper.Login(user, _httpClient);
+                    var loginResponse = await ScenarioHelper.Login(user, context);
 
-                            return Response.Ok(payload: sessionId);
-                        }
-                        catch (Exception ex)
-                        {
-                            context.Logger.Error(ex, "Login failed");
-                            return Response.Fail<string>();
-                        }
-                    });
-
-                    string sessionId = login.Payload.Value;
-
-                    var getAvailableFirm = await Step.Run("get_available_firm", context, async () =>
-                    {
-                        var request = Http.CreateRequest("GET", $"http://localhost/LogoCRMRest/api/v1.0/firms?SessionId={sessionId}")
-                            .WithHeader("Content-Type", "application/json");
-
-                        var response = await Http.Send(_httpClient, request);
-
-                        if (!response.IsError && response.Payload.Value.IsSuccessStatusCode)
-                        {
-                            var firms = response.Payload.Value.Content;
-                            var firmsList = firms.ReadFromJsonAsync<HttpResponse<List<MTFirmResponse>>>().Result.Data;
-
-                            return Response.Ok(payload: firmsList, sizeBytes: response.SizeBytes);
-                        }
-                        else
-                        {
-                            return Response.Fail<List<MTFirmResponse>>();
-                        }
-                    });
-
-                    var firms = getAvailableFirm.Payload.Value;
-
-                    var createFirm = await Step.Run("create_firm", context, async () =>
+                    if (!loginResponse.IsError && loginResponse.Payload.IsSome())
                     {
 
-                        var data = JsonConvert.SerializeObject(new MTFirmDto
+                        string sessionId = loginResponse.Payload.Value;
+
+                        var getAvailableFirm = await Step.Run("get_available_firm", context, async () =>
                         {
-                            FirmCode = "FirmCode",
-                            FirmTitle = "FirmTitle",
-                            InUse = true
+                            var request = Http.CreateRequest("GET", $"http://localhost/LogoCRMRest/api/v1.0/firms?SessionId={sessionId}")
+                                .WithHeader("Content-Type", "application/json");
+
+                            var response = await Http.Send(_httpClient, request);
+
+                            if (!response.IsError && response.Payload.Value.IsSuccessStatusCode)
+                            {
+                                var firms = response.Payload.Value.Content;
+                                var firmsList = firms.ReadFromJsonAsync<HttpResponse<List<MTFirmResponse>>>().Result.Data;
+
+                                return Response.Ok(payload: firmsList, sizeBytes: response.SizeBytes);
+                            }
+                            else
+                            {
+                                return Response.Fail<List<MTFirmResponse>>();
+                            }
                         });
-                        var request = Http.CreateRequest("POST", $"http://localhost/LogoCRMRest/api/v1.0/firms?SessionId={sessionId}")
-                            .WithHeader("Content-Type", "application/json")
-                            .WithBody(new StringContent(data, Encoding.UTF8, "application/json"));
 
-                        var response = await Http.Send(_httpClient, request);
+                        var firms = getAvailableFirm.Payload.Value;
 
-                        return response;
-                    });
+                        var createFirm = await Step.Run("create_firm", context, async () =>
+                        {
 
-                    var logout = await Step.Run("logout", context, async () =>
+                            var data = JsonConvert.SerializeObject(new MTFirmDto
+                            {
+                                FirmCode = "FirmCode",
+                                FirmTitle = "FirmTitle",
+                                InUse = true
+                            });
+                            var request = Http.CreateRequest("POST", $"http://localhost/LogoCRMRest/api/v1.0/firms?SessionId={sessionId}")
+                                .WithHeader("Content-Type", "application/json")
+                                .WithBody(new StringContent(data, Encoding.UTF8, "application/json"));
+
+                            var response = await Http.Send(_httpClient, request);
+
+                            return response;
+                        });
+
+                        var logout = await ScenarioHelper.Logout(user, context);
+
+                        return logout.IsError ? Response.Fail() : Response.Ok();
+                    }
+                    else
                     {
-                        await AuthenticationHelper.Logout(user, _httpClient);
-                        return Response.Ok();
-                    });
-
-                    return Response.Ok();
+                        context.Logger.Error("Login failed or payload is empty.");
+                        return Response.Fail();
+                    }
                 });
         }
     }

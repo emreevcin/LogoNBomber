@@ -17,12 +17,10 @@ namespace LogoNBomber.Scenarios
     public class TestLoginLogoutScenario
     {
         private HttpClient _httpClient = new HttpClient();
-        public ScenarioProps Create()
+        public ScenarioProps Create(UserDto user)
         {
-            var user = new UserDto("LOGO", "LOGO");
-
             return Scenario
-                .Create("login_logout_scenario", async context =>
+                .Create($"{user.UserName}_login_logout_scenario", async context =>
                 {
                     var loginResponse = await ScenarioHelper.Login(user, context);
 
